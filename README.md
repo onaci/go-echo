@@ -7,7 +7,7 @@ Simple golang HTTP echo server
     go run echo.go -p 8080
     
 Click [http://localhost:8080/hello](http://localhost:8080/hello?q=world) 
-and the response should be
+and the response should be similar to this:
     
     {
         "Body": {
