@@ -25,7 +25,7 @@ var routes = Routes{
 		"index", "/", index,
 	},
 	Route{
-		"everything", "/{[a-zA-Z0-9=\\-\\/]+}", everything,
+		"everything", "/{everything:.*}", everything,
 	},
 }
 
