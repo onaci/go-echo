@@ -1,16 +1,17 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
-	"flag"
-	"encoding/json"
 	"net/url"
-	"io/ioutil"
-	"io"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type Route struct {
@@ -36,23 +37,24 @@ type RequestBody struct {
 
 // Request is the same as http.Request minus the bits that break json.Marshall
 type Request struct {
-	Method string
-	URL *url.URL
-	Proto      string // "HTTP/1.0"
-	ProtoMajor int    // 1
-	ProtoMinor int    // 0
-	Header http.Header
-	Body RequestBody
-	ContentLength int64
+	Method           string
+	URL              *url.URL
+	Proto            string // "HTTP/1.0"
+	ProtoMajor       int    // 1
+	ProtoMinor       int    // 0
+	Header           http.Header
+	Body             RequestBody
+	ContentLength    int64
 	TransferEncoding []string
-	Host string
+	Host             string
 	//Form url.Values
 	//PostForm url.Values
 	//MultipartForm *multipart.Form
-	Trailer http.Header
+	Trailer    http.Header
 	RemoteAddr string
 	RequestURI string
 	//TLS *tls.ConnectionState
+	Cookies []*http.Cookie
 }
 
 const megabytes = 1048576
@@ -66,13 +68,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	e.ProtoMinor = r.ProtoMinor
 	e.Header = r.Header
 	e.Body = RequestBody{}
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1 * megabytes))
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1*megabytes))
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err := r.Body.Close(); err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 	e.Body.String = string(body)
 	e.ContentLength = r.ContentLength
 	e.TransferEncoding = r.TransferEncoding
@@ -80,11 +82,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	e.Trailer = r.Trailer
 	e.RemoteAddr = r.RemoteAddr
 	e.RequestURI = r.RequestURI
+	e.Cookies = r.Cookies()
 
 	b, err := json.Marshal(e)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprint(w, string(b))
 }
 
