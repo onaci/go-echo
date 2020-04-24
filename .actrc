@@ -1,0 +1,3 @@
+--bind
+--verbose
+--platform ubuntu-latest=phaze9/action-runner

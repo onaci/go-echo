@@ -1,0 +1,18 @@
+
+on:
+    # I think this may mean it won't get run on github?
+    build:
+
+env:
+    DOCKER_BUILDKIT: 1
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            -
+                name: build image
+                run: |
+                    docker build -t test .
+            
+    
