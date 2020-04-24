@@ -12,6 +12,11 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -
+                name: Checkout
+                # only checkout on github
+                if: env.GITHUB_ACTOR != "nektos/act"
+                uses: actions/checkout@v1
+            -
                 name: env
                 run: |
                     env
