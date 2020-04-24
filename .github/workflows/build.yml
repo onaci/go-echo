@@ -1,9 +1,8 @@
 
 on:
-    # github requires the events to be ones it knows about
-    # this one is basically some form of "custom external webhook"
-    repository_dispatch:
-        types: [local]
+    push:
+
+# can filter jobs using GITHUB_ACTOR=nektos/act
 
 env:
     DOCKER_BUILDKIT: 1
@@ -12,6 +11,11 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
+            -
+                name: env
+                run: |
+                    env
+                    git status
             -
                 name: build image
                 run: |
