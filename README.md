@@ -1,14 +1,34 @@
 # go-echo
 
-Simple golang HTTP echo server
+Simple golang HTTP echo server. Also has a Prometheus metrics endpoint at http://localhost:2112/metrics.
+
+Can be used as a [container image](https://hub.docker.com/r/cirri/echo):
+
+```
+docker run -dit -p 80:80 -p 2112:2112 cirri/echo:latest
+```
+
+
+For use with `cirri` --infra (using caddy, caddy-docker-proxy and some DNS magic):
+
+```
+docker run -dit --network cirri_proxy \
+		--name echo_dev \
+			cirri/echo:latest
+
+maps the echo to `https://echo_dev.${STACKDOMAIN}` and the metrics to `https://echo_dev.${STACKDOMAIN}/metrics` using the `virtual.port` and `virtual.metrics` labels in the image.
+```
 
 ## Quickstart
 
+```
     go run echo.go -p 8080
+```
     
 Click [http://localhost:8080/hello](http://localhost:8080/hello?q=world) 
 and the response should be similar to this:
-    
+
+```
     {
         "Body": {
             "String": ""
@@ -48,5 +68,5 @@ and the response should be similar to this:
             "User": null
         }
     }
-
+```
 

@@ -9,9 +9,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
+	"github.com/google/gops/agent"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Route struct {
@@ -84,6 +89,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	e.RequestURI = r.RequestURI
 	e.Cookies = r.Cookies()
 
+	// TODO detect if we're proxied and change the remoteip to the next endpoint along
+	remoteAddr := r.RemoteAddr
+	if v := r.Header.Get("X-Forwarded-For"); v != "" {
+		remoteAddr = v
+	}
+	requestCount.With(prometheus.Labels{"remoteip": remoteAddr, "host": r.Host}).Inc()
+
 	b, err := json.Marshal(e)
 	if err != nil {
 		log.Fatal(err)
@@ -133,8 +145,35 @@ func main() {
 	port := flag.Int("p", 80, "Port")
 	flag.Parse()
 
+	go runMetrics()
+
 	router := newRouter()
 	log.Println(fmt.Sprintf("Listening on port %v...", *port))
 	log.Fatal(http.ListenAndServe(
 		fmt.Sprintf(":%v", *port), router))
+}
+
+////// prom metrics
+var (
+	requestCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "echo_request_count",
+			Help: "The number of requests to echo",
+		},
+		[]string{"remoteip", "host"},
+	)
+)
+
+func runMetrics() {
+	fmt.Printf("Starting gops metrics\n")
+	if err := agent.Listen(agent.Options{}); err != nil {
+		fmt.Printf("ERROR: %s\n", err)
+	}
+	Port := ":2112"
+	fmt.Printf("Starting Prometheus metrics endpoint on Port %s\n", Port)
+	http.Handle("/metrics", promhttp.Handler())
+	if err := http.ListenAndServe(Port, nil); err != nil {
+		fmt.Printf("Fail to listen to Port %s error: %v, exiting\n", Port, err)
+		os.Exit(1)
+	}
 }

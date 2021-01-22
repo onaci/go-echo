@@ -1,4 +1,4 @@
-FROM golang:alpine3.11 AS builder
+FROM golang:alpine AS builder
 RUN apk add --no-cache git gcc musl-dev
 
 WORKDIR /src
@@ -7,12 +7,16 @@ RUN go mod download
 COPY ./ ./
 RUN go build .
 
-FROM alpine:3.11
+FROM alpine
 
-LABEL Name=go-echo \
-      Release=https://github.com/onaci/go-echo \
-      Url=https://github.com/onaci/go-echo \
-      Help=https://github.com/onaci/go-echo/issues
+LABEL Name=go-echo
+LABEL Release=https://github.com/onaci/go-echo
+LABEL Url=https://github.com/onaci/go-echo
+LABEL Help=https://github.com/onaci/go-echo/issues
+
+LABEL virtual.port=80
+LABEL virtual.metrics=2112
+LABEL virtual.portal=echo_dev
 
 RUN apk add --no-cache ca-certificates
 
